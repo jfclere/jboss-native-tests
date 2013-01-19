@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ JBoss, Home of Professional Open Source.
+  ~ Copyright 2011, Red Hat, Inc., and individual contributors
+  ~ as indicated by the @author tags. See the copyright.txt file in the
+  ~ distribution for a full listing of individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-parent</artifactId>
+        <version>6-beta-1</version>
+    </parent>
+
+   <properties>
+     <version.junit>4.8.1</version.junit>
+     <version.org.jboss.web>7.0.1.Final</version.org.jboss.web>
+     <version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.0_spec>1.0.0.Final</version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.0_spec>
+      <!--
+     <version.org.jboss.web>2.1.11.GA</version.org.jboss.web>
+        -->
+     <version.org.jboss.as.jbossweb-native>2.0.12.Final-SNAPSHOT</version.org.jboss.as.jbossweb-native>
+   </properties>
+
+    <groupId>org.jboss.as</groupId>
+    <artifactId>jbossweb-native-test</artifactId>
+    <version>2.0.10</version>
+    <packaging>jar</packaging>
+
+    <name>JBoss Application Server: Web Native Test</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*TestCase.java</include>
+                    </includes>
+                    <enableAssertions>false</enableAssertions>
+                </configuration>
+            </plugin>
+            <plugin>
+              <artifactId>maven-antrun-plugin</artifactId>
+              <version>1.6</version>
+              <executions>
+                <execution>
+                  <phase>test</phase>
+                  <configuration>
+                    <tasks>
+                      <!-- extract AS7 -->
+                      <unjar  src="AS7.jar" dest="node1" />
+
+                      <!-- extract the native build to test it -->
+
+                      <echo>"native jar: ${org.jboss.as:jbossweb-native:jar}"</echo>
+
+                      <unjar  src="${org.jboss.as:jbossweb-native:jar}" dest="node1/AS7/modules/org/jboss/as/web/main/lib" />
+
+                      <exec executable="chmod">
+                           <arg value="-R"/>
+                           <arg value="a+x"/>
+                           <arg value="node1/AS7/modules/org/jboss/as/web/main/lib"/>
+                      </exec>
+                      <exec executable="chmod">
+                           <arg value="a+x"/>
+                           <arg value="node1/AS7/bin/standalone.sh"/>
+                           <arg value="node1/AS7/bin/jboss-cli.sh"/>
+                      </exec>
+                      <!-- Start jbossweb (embedded) -->
+                      <exec executable="node1/AS7/bin/standalone.sh" spawn="true"/>
+
+                      <sleep seconds="10"/>
+
+                      <exec executable="node1/AS7/bin/jboss-cli.sh">
+                           <arg value="--connect"/>
+                           <arg value="commands=/subsystem=web/connector=https:add(protocol=HTTP/1.1,scheme=https,secure=true,socket-binding=https),/subsystem=web/connector=https/ssl=configuration:add(certificate-file=/home/jfclere/jboss-native-tests/newcert.pem,certificate-key-file=/home/jfclere/jboss-native-tests/newkey.pem,password=changeit),/subsystem=web:write-attribute(name=native,value=true),:shutdown"/>
+                      </exec>
+
+                      <sleep seconds="10"/>
+
+                      <exec executable="node1/AS7/bin/standalone.sh" spawn="true"/>
+
+                      <sleep seconds="10"/>
+
+                      <!-- Test it -->
+                      <delete file="index.html"/>
+                      <exec executable="wget">
+                           <arg value="-T 10"/>
+                           <arg value="--no-check-certificate"/>
+                           <arg value="https://${hostname}:8443/index.html"/>
+                      </exec>
+
+                      <exec executable="node1/AS7/bin/jboss-cli.sh">
+                           <arg value="--connect"/>
+                           <arg value="command=:shutdown"/>
+                      </exec>
+
+                      <available file="index.html" property="exist"/>
+                      <fail unless="exist" message="Can't get test file"/>
+
+                    </tasks>
+                  </configuration>
+                  <goals>
+                    <goal>run</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${version.junit}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.web</groupId>
+            <artifactId>jbossweb</artifactId>
+            <version>${version.org.jboss.web}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.as</groupId>
+            <artifactId>jbossweb-native</artifactId>
+            <version>${version.org.jboss.as.jbossweb-native}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.spec.javax.servlet</groupId>
+            <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+            <version>${version.org.jboss.spec.javax.servlet.jboss-servlet-api_3.0_spec}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <!--
+            <url>https://repository.jboss.org/nexus/content/groups/staging/</url>
+              -->
+            <layout>default</layout>
+            <!--
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+              -->
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
+</project>
+
+<settings>
+
+  <mirrors>
+    <mirror> 
+      <id>jboss-staging-repository-group</id> 
+      <mirrorOf>*</mirrorOf> 
+      <name>JBoss.org Staging Repository Group</name> 
+      <url>https://repository.jboss.org/nexus/content/groups/staging/</url> 
+    </mirror>
+  </mirrors>
+</settings>
