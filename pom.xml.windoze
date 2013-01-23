@@ -99,7 +99,7 @@
                            <arg value="https://localhost:8443/index.html"/>
                       </exec>
 
-                      <exec executable="node1/AS7/bin/jboss-cli.sh">
+                      <exec executable="node1/AS7/bin/jboss-cli.bat">
                            <arg value="--connect"/>
                            <arg value="command=:shutdown"/>
                       </exec>
