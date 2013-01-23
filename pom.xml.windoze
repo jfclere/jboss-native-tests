@@ -96,7 +96,7 @@
                       <delete file="index.html"/>
                       <exec executable="wget">
                            <arg value="--no-check-certificate"/>
-                           <arg value="https://localhost:8009/index.html"/>
+                           <arg value="https://localhost:8443/index.html"/>
                       </exec>
 
                       <exec executable="node1/AS7/bin/jboss-cli.sh">
