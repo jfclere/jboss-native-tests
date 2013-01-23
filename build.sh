@@ -52,9 +52,9 @@ do
 done
 
 if $force_64; then
-  mvn -Djvmsize=64 -Dhostname=localhost install || exit 1
+  mvn -Djvmsize=64 -Dhostname=localhost -Dbuild_top=$build_top install || exit 1
 else
-  mvn -Djvmsize=32 -Dhostname=localhost install || exit 1
+  mvn -Djvmsize=32 -Dhostname=localhost -Dbuild_top=$build_top install || exit 1
 fi
 
 echo ""
