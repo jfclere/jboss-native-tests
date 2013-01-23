@@ -83,7 +83,7 @@
 
                       <exec executable="node1/AS7/bin/jboss-cli.bat">
                            <arg value="--connect"/>
-                           <arg value="commands=/subsystem=web/connector=https:add(protocol=HTTP/1.1,scheme=https,secure=true,socket-binding=https),/subsystem=web/connector=https/ssl=configuration:add(certificate-file="${build_top}"\newcert.pem,certificate-key-file="${build_top}"\newkey.pem,password=changeit),/subsystem=web:write-attribute(name=native,value=true),:shutdown"/>
+                           <arg value="commands=/subsystem=web/connector=https:add(protocol=HTTP/1.1,scheme=https,secure=true,socket-binding=https),/subsystem=web/connector=https/ssl=configuration:add(certificate-file=${build_top}newcert.pem,certificate-key-file=${build_top}newkey.pem,password=changeit),/subsystem=web:write-attribute(name=native,value=true),:shutdown"/>
                       </exec>
 
                       <sleep seconds="10"/>
